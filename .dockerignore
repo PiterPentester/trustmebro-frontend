@@ -1,0 +1,14 @@
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.vscode
+.idea
+.DS_Store
+
+# Project specific
+k8s/
+Makefile
+README.md
