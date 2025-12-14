@@ -70,6 +70,18 @@ make build
 make push
 ```
 
+### Kubernetes Deployment
+
+You can deploy the application to a Kubernetes cluster using the following commands:
+
+```bash
+# Deploy to Kubernetes
+make deploy
+
+# Remove from Kubernetes
+make undeploy
+```
+
 ## 📝 License
 
 This project is licensed under the MIT License.
