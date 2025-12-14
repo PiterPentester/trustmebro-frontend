@@ -8,11 +8,13 @@ PORT := 8080
 
 help:
 	@echo "Available targets:"
-	@echo "  build  - Build Docker image"
-	@echo "  push   - Push Docker image to registry"
-	@echo "  run    - Run container on port $(PORT)"
-	@echo "  stop   - Stop running container"
-	@echo "  clean  - Remove image"
+	@echo "  build    - Build Docker image"
+	@echo "  push     - Push Docker image to registry"
+	@echo "  run      - Run container on port $(PORT)"
+	@echo "  stop     - Stop running container"
+	@echo "  clean    - Remove image"
+	@echo "  deploy   - Deploy to Kubernetes"
+	@echo "  undeploy - remove from Kubernetes"
 
 build:
 	docker buildx build --platform linux/amd64,linux/arm64 -t $(IMAGE_NAME):$(IMAGE_TAG) .
@@ -30,3 +32,9 @@ stop:
 
 clean: stop
 	docker rmi $(IMAGE_NAME):$(IMAGE_TAG) || true
+
+deploy:
+	kubectl apply -f k8s/frontend-deployment.yaml
+
+undeploy:
+	kubectl delete -f k8s/frontend-deployment.yaml
