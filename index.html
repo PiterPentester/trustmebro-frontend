@@ -1,456 +1,462 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Certificate Manager</title>
-      <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
-      <script src="https://cdn.tailwindcss.com"></script>
-      <style>
-        .fade-in {
-          animation: fadeIn 0.3s ease-in;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      </style>
-    </head>
-    <body class="bg-gray-50 min-h-screen">
-      <div id="root"></div>
-    
-      <script type="text/babel" data-type="module">
-        const { useState } = React;
-    
-        // API Configuration
-        const API_BASE_URL = 'http://localhost:8080';
-    
-        // API Service
-        const apiService = {
-          async generateCertificate(certData) {
-            const response = await fetch(`${API_BASE_URL}/generate`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(certData)
-            });
-            
-            if (!response.ok) {
-              const error = await response.json();
-              throw new Error(error.detail?.[0]?.msg || 'Failed to generate certificate');
-            }
-            
-            return response.json();
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module">
+    const { useState } = React;
+
+    // API Configuration
+    const API_BASE_URL = 'http://backend:8080';
+
+    // API Service
+    const apiService = {
+      async generateCertificate(certData) {
+        const response = await fetch(`${API_BASE_URL}/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-    
-          async downloadCertificate(validationNumber) {
-            const response = await fetch(`${API_BASE_URL}/download/${validationNumber}`);
-            
-            if (!response.ok) {
-              const error = await response.json();
-              throw new Error(error.detail?.[0]?.msg || 'Failed to download certificate');
-            }
-            
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `certificate-${validationNumber}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-          },
-    
-          async validateCertificate(validationNumber) {
-            const response = await fetch(`${API_BASE_URL}/validate/${validationNumber}`);
-            
-            if (!response.ok) {
-              const error = await response.json();
-              throw new Error(error.detail?.[0]?.msg || 'Failed to validate certificate');
-            }
-            
-            return response.json();
-          }
-        };
-    
-        // UI Components
-        const Input = ({ label, id, type = 'text', value, onChange, required = false, className = '', ...props }) => (
-          <div className={`mb-4 ${className}`}>
-            <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
-              {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            <input
-              type={type}
-              id={id}
-              value={value}
-              onChange={onChange}
-              required={required}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              {...props}
-            />
-          </div>
-        );
-    
-        const Select = ({ label, id, value, onChange, options, required = false, className = '' }) => (
-          <div className={`mb-4 ${className}`}>
-            <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
-              {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            <select
-              id={id}
-              value={value}
-              onChange={onChange}
-              required={required}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select an option</option>
-              {options.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        );
-    
-        const Button = ({ children, onClick, disabled = false, variant = 'primary', className = '', ...props }) => {
-          const baseClasses = "px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors";
-          const variantClasses = {
-            primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-            secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500",
-            danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500"
-          };
-          
-          return (
-            <button
-              onClick={onClick}
-              disabled={disabled}
-              className={`${baseClasses} ${variantClasses[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
-              {...props}
-            >
-              {children}
-            </button>
-          );
-        };
-    
-        const Alert = ({ message, type = 'info', onClose }) => (
-          <div className={`p-4 mb-4 rounded-md fade-in ${
-            type === 'error' ? 'bg-red-50 text-red-800' : 
-            type === 'success' ? 'bg-green-50 text-green-800' : 
+          body: JSON.stringify(certData)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail?.[0]?.msg || 'Failed to generate certificate');
+        }
+
+        return response.json();
+      },
+
+      async downloadCertificate(validationNumber) {
+        const response = await fetch(`${API_BASE_URL}/download/${validationNumber}`);
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail?.[0]?.msg || 'Failed to download certificate');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `certificate-${validationNumber}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+
+      async validateCertificate(validationNumber) {
+        const response = await fetch(`${API_BASE_URL}/validate/${validationNumber}`);
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail?.[0]?.msg || 'Failed to validate certificate');
+        }
+
+        return response.json();
+      }
+    };
+
+    // UI Components
+    const Input = ({ label, id, type = 'text', value, onChange, required = false, className = '', ...props }) => (
+      <div className={`mb-4 ${className}`}>
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        <input
+          type={type}
+          id={id}
+          value={value}
+          onChange={onChange}
+          required={required}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          {...props}
+        />
+      </div>
+    );
+
+    const Select = ({ label, id, value, onChange, options, required = false, className = '' }) => (
+      <div className={`mb-4 ${className}`}>
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        <select
+          id={id}
+          value={value}
+          onChange={onChange}
+          required={required}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Select an option</option>
+          {options.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+
+    const Button = ({ children, onClick, disabled = false, variant = 'primary', className = '', ...props }) => {
+      const baseClasses = "px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors";
+      const variantClasses = {
+        primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
+        secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500",
+        danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500"
+      };
+
+      return (
+        <button
+          onClick={onClick}
+          disabled={disabled}
+          className={`${baseClasses} ${variantClasses[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+          {...props}
+        >
+          {children}
+        </button>
+      );
+    };
+
+    const Alert = ({ message, type = 'info', onClose }) => (
+      <div className={`p-4 mb-4 rounded-md fade-in ${type === 'error' ? 'bg-red-50 text-red-800' :
+          type === 'success' ? 'bg-green-50 text-green-800' :
             'bg-blue-50 text-blue-800'
-          }`}>
-            <div className="flex justify-between items-center">
-              <span>{message}</span>
-              {onClose && (
-                <button 
-                  onClick={onClose} 
-                  className="text-xl font-bold leading-none opacity-50 hover:opacity-75 focus:outline-none"
-                  aria-label="Close"
-                >
-                  &times;
-                </button>
-              )}
+        }`}>
+        <div className="flex justify-between items-center">
+          <span>{message}</span>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="text-xl font-bold leading-none opacity-50 hover:opacity-75 focus:outline-none"
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          )}
+        </div>
+      </div>
+    );
+
+    // Main App Component
+    const App = () => {
+      const [activeTab, setActiveTab] = useState('generate'); // 'generate' or 'validate'
+      const [loading, setLoading] = useState(false);
+      const [alert, setAlert] = useState(null);
+
+      // Generate Certificate State
+      const [certData, setCertData] = useState({
+        cert_type: '',
+        recipient: '',
+        item_to_prove: ''
+      });
+      const [validationNumber, setValidationNumber] = useState('');
+
+      // Validate Certificate State
+      const [validateInput, setValidateInput] = useState('');
+      const [validationResult, setValidationResult] = useState(null);
+
+      // Download Certificate State
+      const [downloadInput, setDownloadInput] = useState('');
+
+      const showAlert = (message, type = 'info', duration = 5000) => {
+        setAlert({ message, type });
+        if (duration) {
+          setTimeout(() => setAlert(null), duration);
+        }
+      };
+
+      const handleCertDataChange = (e) => {
+        const { id, value } = e.target;
+        setCertData(prev => ({ ...prev, [id]: value }));
+      };
+
+      const handleGenerate = async () => {
+        try {
+          setLoading(true);
+          const data = await apiService.generateCertificate(certData);
+          setValidationNumber(data.validation_number || data.cert_validation_number || '');
+          showAlert('Certificate generated successfully!', 'success');
+        } catch (error) {
+          showAlert(error.message || 'Failed to generate certificate', 'error');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handleDownload = async () => {
+        if (!downloadInput.trim()) {
+          showAlert('Please enter a validation number', 'error');
+          return;
+        }
+
+        try {
+          setLoading(true);
+          await apiService.downloadCertificate(downloadInput.trim());
+          showAlert('Download started!', 'success');
+        } catch (error) {
+          showAlert(error.message || 'Failed to download certificate', 'error');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handleValidate = async () => {
+        if (!validateInput.trim()) {
+          showAlert('Please enter a validation number', 'error');
+          return;
+        }
+
+        try {
+          setLoading(true);
+          const result = await apiService.validateCertificate(validateInput.trim());
+
+          // Check if the certificate is valid and extract the certificate data
+          if (result.valid && result.certificate) {
+            setValidationResult(result.certificate);
+            showAlert('Certificate validated successfully!', 'success');
+          } else {
+            setValidationResult(null);
+            showAlert(result.error || 'Certificate is not valid', 'error');
+          }
+        } catch (error) {
+          setValidationResult(null);
+          showAlert(error.message || 'Failed to validate certificate', 'error');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const renderGenerateTab = () => (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-800">Generate Certificate</h2>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <Select
+              id="cert_type"
+              label="Certificate Type"
+              value={certData.cert_type}
+              onChange={handleCertDataChange}
+              options={[
+                { value: 'achievement', label: 'Achievement' },
+                { value: 'completion', label: 'Completion' },
+                { value: 'ownership', label: 'Ownership' }
+              ]}
+              required
+            />
+
+            <Input
+              id="recipient"
+              label="Recipient Name"
+              value={certData.recipient}
+              onChange={handleCertDataChange}
+              placeholder="Enter recipient's name"
+              required
+            />
+
+            <Input
+              id="item_to_prove"
+              label="Item to Prove"
+              value={certData.item_to_prove}
+              onChange={handleCertDataChange}
+              placeholder="What are you certifying?"
+              required
+            />
+
+            <div className="mt-6">
+              <Button
+                onClick={handleGenerate}
+                disabled={loading || !certData.cert_type || !certData.recipient || !certData.item_to_prove}
+                className="w-full"
+              >
+                {loading ? 'Generating...' : 'Generate Certificate'}
+              </Button>
             </div>
+
+            {validationNumber && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md space-y-3">
+                <p className="text-blue-800 font-medium">Certificate Generated Successfully!</p>
+                <p className="text-sm text-blue-700">
+                  Validation Number: <span className="font-mono bg-blue-100 px-2 py-1 rounded">{validationNumber}</span>
+                </p>
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <Button
+                    onClick={async () => {
+                      try {
+                        setLoading(true);
+                        await apiService.downloadCertificate(validationNumber);
+                        showAlert('Download started!', 'success');
+                      } catch (error) {
+                        showAlert(error.message || 'Failed to download certificate', 'error');
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    variant="secondary"
+                    className="flex-1"
+                  >
+                    Download Certificate
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setValidateInput(validationNumber);
+                      setActiveTab('validate');
+                    }}
+                    variant="primary"
+                    className="flex-1"
+                  >
+                    Validate Certificate
+                  </Button>
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  Save the validation number for future reference.
+                </p>
+              </div>
+            )}
           </div>
-        );
-    
-        // Main App Component
-        const App = () => {
-          const [activeTab, setActiveTab] = useState('generate'); // 'generate' or 'validate'
-          const [loading, setLoading] = useState(false);
-          const [alert, setAlert] = useState(null);
-          
-          // Generate Certificate State
-          const [certData, setCertData] = useState({
-            cert_type: '',
-            recipient: '',
-            item_to_prove: ''
-          });
-          const [validationNumber, setValidationNumber] = useState('');
-          
-          // Validate Certificate State
-          const [validateInput, setValidateInput] = useState('');
-          const [validationResult, setValidationResult] = useState(null);
-          
-          // Download Certificate State
-          const [downloadInput, setDownloadInput] = useState('');
-    
-          const showAlert = (message, type = 'info', duration = 5000) => {
-            setAlert({ message, type });
-            if (duration) {
-              setTimeout(() => setAlert(null), duration);
-            }
-          };
-    
-          const handleCertDataChange = (e) => {
-            const { id, value } = e.target;
-            setCertData(prev => ({ ...prev, [id]: value }));
-          };
-    
-          const handleGenerate = async () => {
-            try {
-              setLoading(true);
-              const data = await apiService.generateCertificate(certData);
-              setValidationNumber(data.validation_number || data.cert_validation_number || '');
-              showAlert('Certificate generated successfully!', 'success');
-            } catch (error) {
-              showAlert(error.message || 'Failed to generate certificate', 'error');
-            } finally {
-              setLoading(false);
-            }
-          };
-    
-          const handleDownload = async () => {
-            if (!downloadInput.trim()) {
-              showAlert('Please enter a validation number', 'error');
-              return;
-            }
-            
-            try {
-              setLoading(true);
-              await apiService.downloadCertificate(downloadInput.trim());
-              showAlert('Download started!', 'success');
-            } catch (error) {
-              showAlert(error.message || 'Failed to download certificate', 'error');
-            } finally {
-              setLoading(false);
-            }
-          };
-    
-          const handleValidate = async () => {
-            if (!validateInput.trim()) {
-              showAlert('Please enter a validation number', 'error');
-              return;
-            }
-            
-            try {
-              setLoading(true);
-              const result = await apiService.validateCertificate(validateInput.trim());
-              
-              // Check if the certificate is valid and extract the certificate data
-              if (result.valid && result.certificate) {
-                setValidationResult(result.certificate);
-                showAlert('Certificate validated successfully!', 'success');
-              } else {
-                setValidationResult(null);
-                showAlert(result.error || 'Certificate is not valid', 'error');
-              }
-            } catch (error) {
-              setValidationResult(null);
-              showAlert(error.message || 'Failed to validate certificate', 'error');
-            } finally {
-              setLoading(false);
-            }
-          };
-    
-          const renderGenerateTab = () => (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800">Generate Certificate</h2>
-              
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <Select
-                  id="cert_type"
-                  label="Certificate Type"
-                  value={certData.cert_type}
-                  onChange={handleCertDataChange}
-                  options={[
-                    { value: 'achievement', label: 'Achievement' },
-                    { value: 'completion', label: 'Completion' },
-                    { value: 'ownership', label: 'Ownership' }
-                  ]}
-                  required
-                />
-                
-                <Input
-                  id="recipient"
-                  label="Recipient Name"
-                  value={certData.recipient}
-                  onChange={handleCertDataChange}
-                  placeholder="Enter recipient's name"
-                  required
-                />
-                
-                <Input
-                  id="item_to_prove"
-                  label="Item to Prove"
-                  value={certData.item_to_prove}
-                  onChange={handleCertDataChange}
-                  placeholder="What are you certifying?"
-                  required
-                />
-                
-                <div className="mt-6">
-                  <Button 
-                    onClick={handleGenerate} 
-                    disabled={loading || !certData.cert_type || !certData.recipient || !certData.item_to_prove}
-                    className="w-full"
-                  >
-                    {loading ? 'Generating...' : 'Generate Certificate'}
-                  </Button>
+        </div>
+      );
+
+      const renderValidateTab = () => (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-800">Validate Certificate</h2>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <Input
+              id="validate-input"
+              label="Validation Number"
+              value={validateInput}
+              onChange={(e) => setValidateInput(e.target.value)}
+              placeholder="Enter validation number"
+              required
+            />
+
+            <div className="mt-6">
+              <Button
+                onClick={handleValidate}
+                disabled={loading || !validateInput.trim()}
+                className="w-full"
+              >
+                {loading ? 'Validating...' : 'Validate Certificate'}
+              </Button>
+            </div>
+
+            {validationResult && (
+              <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+                <h3 className="text-lg font-medium text-green-800">Certificate is Valid</h3>
+                <div className="mt-2 space-y-2 text-sm text-green-700">
+                  <p><span className="font-medium">Type:</span> {validationResult.cert_type}</p>
+                  <p><span className="font-medium">Recipient:</span> {validationResult.recipient_name}</p>
+                  <p><span className="font-medium">Item:</span> {validationResult.item_to_prove}</p>
+                  <p><span className="font-medium">Issued At:</span> {validationResult.issued_on}</p>
                 </div>
-                
-                {validationNumber && (
-                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md space-y-3">
-                    <p className="text-blue-800 font-medium">Certificate Generated Successfully!</p>
-                    <p className="text-sm text-blue-700">
-                      Validation Number: <span className="font-mono bg-blue-100 px-2 py-1 rounded">{validationNumber}</span>
-                    </p>
-                    <div className="flex flex-wrap gap-3 pt-2">
-                      <Button 
-                        onClick={async () => {
-                          try {
-                            setLoading(true);
-                            await apiService.downloadCertificate(validationNumber);
-                            showAlert('Download started!', 'success');
-                          } catch (error) {
-                            showAlert(error.message || 'Failed to download certificate', 'error');
-                          } finally {
-                            setLoading(false);
-                          }
-                        }}
-                        variant="secondary"
-                        className="flex-1"
-                      >
-                        Download Certificate
-                      </Button>
-                      <Button 
-                        onClick={() => {
-                          setValidateInput(validationNumber);
-                          setActiveTab('validate');
-                        }}
-                        variant="primary"
-                        className="flex-1"
-                      >
-                        Validate Certificate
-                      </Button>
-                    </div>
-                    <p className="text-xs text-blue-600 mt-2">
-                      Save the validation number for future reference.
-                    </p>
-                  </div>
-                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+
+      return (
+        <div className="min-h-screen bg-gray-50">
+          {/* Header */}
+          <header className="bg-white shadow">
+            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+              <h1 className="text-3xl font-bold text-gray-900">TrustMeBro Certificate Generator</h1>
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            {/* Tabs */}
+            <div className="border-b border-gray-200 mb-8">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveTab('generate')}
+                  className={`${activeTab === 'generate'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Generate
+                </button>
+                <button
+                  onClick={() => setActiveTab('validate')}
+                  className={`${activeTab === 'validate'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                >
+                  Validate
+                </button>
+              </nav>
+            </div>
+
+            {/* Alert */}
+            {alert && (
+              <div className="mb-6">
+                <Alert
+                  message={alert.message}
+                  type={alert.type}
+                  onClose={() => setAlert(null)}
+                />
+              </div>
+            )}
+
+            {/* Tab Content */}
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                {activeTab === 'generate' && renderGenerateTab()}
+                {activeTab === 'download' && renderDownloadTab()}
+                {activeTab === 'validate' && renderValidateTab()}
               </div>
             </div>
-          );
-    
-          const renderValidateTab = () => (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800">Validate Certificate</h2>
-              
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <Input
-                  id="validate-input"
-                  label="Validation Number"
-                  value={validateInput}
-                  onChange={(e) => setValidateInput(e.target.value)}
-                  placeholder="Enter validation number"
-                  required
-                />
-                
-                <div className="mt-6">
-                  <Button 
-                    onClick={handleValidate} 
-                    disabled={loading || !validateInput.trim()}
-                    className="w-full"
-                  >
-                    {loading ? 'Validating...' : 'Validate Certificate'}
-                  </Button>
-                </div>
-                
-                {validationResult && (
-                  <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-                    <h3 className="text-lg font-medium text-green-800">Certificate is Valid</h3>
-                    <div className="mt-2 space-y-2 text-sm text-green-700">
-                      <p><span className="font-medium">Type:</span> {validationResult.cert_type}</p>
-                      <p><span className="font-medium">Recipient:</span> {validationResult.recipient_name}</p>
-                      <p><span className="font-medium">Item:</span> {validationResult.item_to_prove}</p>
-                      <p><span className="font-medium">Issued At:</span> {validationResult.issued_on}</p>
-                    </div>
-                  </div>
-                )}
+          </main>
+
+          {/* Loading Overlay */}
+          {loading && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span className="text-gray-700">Processing...</span>
               </div>
             </div>
-          );
-    
-          return (
-            <div className="min-h-screen bg-gray-50">
-              {/* Header */}
-              <header className="bg-white shadow">
-                <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                  <h1 className="text-3xl font-bold text-gray-900">TrustMeBro Certificate Generator</h1>
-                </div>
-              </header>
-    
-              {/* Main Content */}
-              <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                {/* Tabs */}
-                <div className="border-b border-gray-200 mb-8">
-                  <nav className="-mb-px flex space-x-8">
-                    <button
-                      onClick={() => setActiveTab('generate')}
-                      className={`${
-                        activeTab === 'generate'
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                    >
-                      Generate
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('validate')}
-                      className={`${
-                        activeTab === 'validate'
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                    >
-                      Validate
-                    </button>
-                  </nav>
-                </div>
-    
-                {/* Alert */}
-                {alert && (
-                  <div className="mb-6">
-                    <Alert 
-                      message={alert.message} 
-                      type={alert.type} 
-                      onClose={() => setAlert(null)} 
-                    />
-                  </div>
-                )}
-    
-                {/* Tab Content */}
-                <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                  <div className="px-4 py-5 sm:p-6">
-                    {activeTab === 'generate' && renderGenerateTab()}
-                    {activeTab === 'download' && renderDownloadTab()}
-                    {activeTab === 'validate' && renderValidateTab()}
-                  </div>
-                </div>
-              </main>
-    
-              {/* Loading Overlay */}
-              {loading && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                    <span className="text-gray-700">Processing...</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        };
-    
-        // Render the app
-        const container = document.getElementById('root');
-        const root = ReactDOM.createRoot(container);
-        root.render(<App />);
-      </script>
-    </body>
-    </html>
+          )}
+        </div>
+      );
+    };
+
+    // Render the app
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
+</body>
+
+</html>
