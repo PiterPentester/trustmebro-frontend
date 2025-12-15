@@ -28,7 +28,7 @@ spec:
       containers:
       - name: frontend
         image: ghcr.io/piterpentester/trustmebro-frontend:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - name: http
           containerPort: 80
