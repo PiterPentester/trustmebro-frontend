@@ -170,12 +170,93 @@
       const [activeTab, setActiveTab] = useState('generate'); // 'generate' or 'validate'
       const [loading, setLoading] = useState(false);
       const [alert, setAlert] = useState(null);
+      const [language, setLanguage] = useState('en');
+
+      const translations = {
+        en: {
+          title: 'TrustMeBro Certificate Generator',
+          generateTab: 'Generate',
+          validateTab: 'Validate',
+          downloadTab: 'Download',
+          generateTitle: 'Generate Certificate',
+          validateTitle: 'Validate Certificate',
+          certType: 'Certificate Type',
+          selectOption: 'Select an option',
+          achievement: 'Achievement',
+          completion: 'Completion',
+          ownership: 'Ownership',
+          recipient: 'Recipient Name',
+          recipientPlaceholder: "Enter recipient's name",
+          itemToProve: 'Item to Prove',
+          itemPlaceholder: 'What are you certifying?',
+          generateButton: 'Generate Certificate',
+          generating: 'Generating...',
+          validateButton: 'Validate Certificate',
+          validating: 'Validating...',
+          downloadButton: 'Download Certificate',
+          successGen: 'Certificate Generated Successfully!',
+          validationNum: 'Validation Number',
+          saveNum: 'Save the validation number for future reference.',
+          validCert: 'Certificate is Valid',
+          type: 'Type',
+          recipientLabel: 'Recipient',
+          itemLabel: 'Item',
+          issuedAt: 'Issued At',
+          enterValNum: 'Enter validation number',
+          selectLang: 'Language',
+          downloadStarted: 'Download started!',
+          certValid: 'Certificate validated successfully!',
+          certInvalid: 'Certificate is not valid',
+          genSuccess: 'Certificate generated successfully!',
+          valNumRequired: 'Please enter a validation number',
+        },
+        uk: {
+          title: 'Генератор Сертифікатів TrustMeBro',
+          generateTab: 'Створити',
+          validateTab: 'Перевірити',
+          downloadTab: 'Завантажити',
+          generateTitle: 'Створити Сертифікат',
+          validateTitle: 'Перевірити Сертифікат',
+          certType: 'Тип Сертифіката',
+          selectOption: 'Оберіть опцію',
+          achievement: 'Досягнення',
+          completion: 'Завершення',
+          ownership: 'Власність',
+          recipient: "Ім'я Отримувача",
+          recipientPlaceholder: "Введіть ім'я отримувача",
+          itemToProve: 'Предмет Сертифікації',
+          itemPlaceholder: 'Що ви підтверджуєте?',
+          generateButton: 'Створити Сертифікат',
+          generating: 'Створення...',
+          validateButton: 'Перевірити Сертифікат',
+          validating: 'Перевірка...',
+          downloadButton: 'Завантажити Сертифікат',
+          successGen: 'Сертифікат успішно створено!',
+          validationNum: 'Номер Валідації',
+          saveNum: 'Збережіть номер валідації для майбутнього використання.',
+          validCert: 'Сертифікат Дійсний',
+          type: 'Тип',
+          recipientLabel: 'Отримувач',
+          itemLabel: 'Предмет',
+          issuedAt: 'Видано',
+          enterValNum: 'Введіть номер валідації',
+          selectLang: 'Мова',
+          downloadStarted: 'Завантаження розпочато!',
+          certValid: 'Сертифікат успішно перевірено!',
+          certInvalid: 'Сертифікат не є дійсним',
+          genSuccess: 'Сертифікат успішно створено!',
+          valNumRequired: 'Будь ласка, введіть номер валідації',
+        }
+      };
+
+      const t = translations[language];
 
       // Generate Certificate State
       const [certData, setCertData] = useState({
         cert_type: '',
         recipient: '',
-        item_to_prove: ''
+        item_to_prove: '',
+        language: 'en'
       });
       const [validationNumber, setValidationNumber] = useState('');
 
@@ -194,6 +275,11 @@
         }
       }, []);
 
+      // Update certData when language changes
+      useEffect(() => {
+        setCertData(prev => ({ ...prev, language }));
+      }, [language]);
+
       const showAlert = (message, type = 'info', duration = 5000) => {
         setAlert({ message, type });
         if (duration) {
@@ -211,7 +297,7 @@
           setLoading(true);
           const data = await apiService.generateCertificate(certData);
           setValidationNumber(data.validation_number || data.cert_validation_number || '');
-          showAlert('Certificate generated successfully!', 'success');
+          showAlert(t.genSuccess, 'success');
         } catch (error) {
           showAlert(error.message || 'Failed to generate certificate', 'error');
         } finally {
@@ -221,14 +307,14 @@
 
       const handleDownload = async () => {
         if (!downloadInput.trim()) {
-          showAlert('Please enter a validation number', 'error');
+          showAlert(t.valNumRequired, 'error');
           return;
         }
 
         try {
           setLoading(true);
           await apiService.downloadCertificate(downloadInput.trim());
-          showAlert('Download started!', 'success');
+          showAlert(t.downloadStarted, 'success');
         } catch (error) {
           showAlert(error.message || 'Failed to download certificate', 'error');
         } finally {
@@ -238,7 +324,7 @@
 
       const handleValidate = async () => {
         if (!validateInput.trim()) {
-          showAlert('Please enter a validation number', 'error');
+          showAlert(t.valNumRequired, 'error');
           return;
         }
 
@@ -249,10 +335,10 @@
           // Check if the certificate is valid and extract the certificate data
           if (result.valid && result.certificate) {
             setValidationResult(result.certificate);
-            showAlert('Certificate validated successfully!', 'success');
+            showAlert(t.certValid, 'success');
           } else {
             setValidationResult(null);
-            showAlert(result.error || 'Certificate is not valid', 'error');
+            showAlert(result.error || t.certInvalid, 'error');
           }
         } catch (error) {
           setValidationResult(null);
@@ -264,37 +350,37 @@
 
       const renderGenerateTab = () => (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">Generate Certificate</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t.generateTitle}</h2>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <Select
               id="cert_type"
-              label="Certificate Type"
+              label={t.certType}
               value={certData.cert_type}
               onChange={handleCertDataChange}
               options={[
-                { value: 'achievement', label: 'Achievement' },
-                { value: 'completion', label: 'Completion' },
-                { value: 'ownership', label: 'Ownership' }
+                { value: 'achievement', label: t.achievement },
+                { value: 'completion', label: t.completion },
+                { value: 'ownership', label: t.ownership }
               ]}
               required
             />
 
             <Input
               id="recipient"
-              label="Recipient Name"
+              label={t.recipient}
               value={certData.recipient}
               onChange={handleCertDataChange}
-              placeholder="Enter recipient's name"
+              placeholder={t.recipientPlaceholder}
               required
             />
 
             <Input
               id="item_to_prove"
-              label="Item to Prove"
+              label={t.itemToProve}
               value={certData.item_to_prove}
               onChange={handleCertDataChange}
-              placeholder="What are you certifying?"
+              placeholder={t.itemPlaceholder}
               required
             />
 
@@ -304,15 +390,15 @@
                 disabled={loading || !certData.cert_type || !certData.recipient || !certData.item_to_prove}
                 className="w-full"
               >
-                {loading ? 'Generating...' : 'Generate Certificate'}
+                {loading ? t.generating : t.generateButton}
               </Button>
             </div>
 
             {validationNumber && (
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md space-y-3">
-                <p className="text-blue-800 font-medium">Certificate Generated Successfully!</p>
+                <p className="text-blue-800 font-medium">{t.successGen}</p>
                 <p className="text-sm text-blue-700">
-                  Validation Number: <span className="font-mono bg-blue-100 px-2 py-1 rounded">{validationNumber}</span>
+                  {t.validationNum}: <span className="font-mono bg-blue-100 px-2 py-1 rounded">{validationNumber}</span>
                 </p>
                 <div className="flex flex-wrap gap-3 pt-2">
                   <Button
@@ -320,7 +406,7 @@
                       try {
                         setLoading(true);
                         await apiService.downloadCertificate(validationNumber);
-                        showAlert('Download started!', 'success');
+                        showAlert(t.downloadStarted, 'success');
                       } catch (error) {
                         showAlert(error.message || 'Failed to download certificate', 'error');
                       } finally {
@@ -330,7 +416,7 @@
                     variant="secondary"
                     className="flex-1"
                   >
-                    Download Certificate
+                    {t.downloadButton}
                   </Button>
                   <Button
                     onClick={() => {
@@ -340,11 +426,11 @@
                     variant="primary"
                     className="flex-1"
                   >
-                    Validate Certificate
+                    {t.validateButton}
                   </Button>
                 </div>
                 <p className="text-xs text-blue-600 mt-2">
-                  Save the validation number for future reference.
+                  {t.saveNum}
                 </p>
               </div>
             )}
@@ -354,15 +440,15 @@
 
       const renderValidateTab = () => (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">Validate Certificate</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t.validateTitle}</h2>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <Input
               id="validate-input"
-              label="Validation Number"
+              label={t.validationNum}
               value={validateInput}
               onChange={(e) => setValidateInput(e.target.value)}
-              placeholder="Enter validation number"
+              placeholder={t.enterValNum}
               required
             />
 
@@ -372,18 +458,18 @@
                 disabled={loading || !validateInput.trim()}
                 className="w-full"
               >
-                {loading ? 'Validating...' : 'Validate Certificate'}
+                {loading ? t.validating : t.validateButton}
               </Button>
             </div>
 
             {validationResult && (
               <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-                <h3 className="text-lg font-medium text-green-800">Certificate is Valid</h3>
+                <h3 className="text-lg font-medium text-green-800">{t.validCert}</h3>
                 <div className="mt-2 space-y-2 text-sm text-green-700">
-                  <p><span className="font-medium">Type:</span> {validationResult.cert_type}</p>
-                  <p><span className="font-medium">Recipient:</span> {validationResult.recipient_name}</p>
-                  <p><span className="font-medium">Item:</span> {validationResult.item_to_prove}</p>
-                  <p><span className="font-medium">Issued At:</span> {validationResult.issued_on}</p>
+                  <p><span className="font-medium">{t.type}:</span> {validationResult.cert_type}</p>
+                  <p><span className="font-medium">{t.recipientLabel}:</span> {validationResult.recipient_name}</p>
+                  <p><span className="font-medium">{t.itemLabel}:</span> {validationResult.item_to_prove}</p>
+                  <p><span className="font-medium">{t.issuedAt}:</span> {validationResult.issued_on}</p>
                 </div>
               </div>
             )}
@@ -395,8 +481,19 @@
         <div className="min-h-screen bg-gray-50">
           {/* Header */}
           <header className="bg-white shadow">
-            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-              <h1 className="text-3xl font-bold text-gray-900">TrustMeBro Certificate Generator</h1>
+            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+              <h1 className="text-3xl font-bold text-gray-900">{t.title}</h1>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-gray-700">Language:</span>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-1 px-2"
+                >
+                  <option value="en">English</option>
+                  <option value="uk">Українська</option>
+                </select>
+              </div>
             </div>
           </header>
 
@@ -412,7 +509,7 @@
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                 >
-                  Generate
+                  {t.generateTab}
                 </button>
                 <button
                   onClick={() => setActiveTab('validate')}
@@ -421,7 +518,7 @@
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
                 >
-                  Validate
+                  {t.validateTab}
                 </button>
               </nav>
             </div>
