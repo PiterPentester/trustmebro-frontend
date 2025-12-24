@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
   <meta charset="UTF-8">
@@ -9,6 +9,31 @@
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            gray: {
+              750: '#2d3748',
+              850: '#1a202c',
+              900: '#111827',
+              950: '#0B0E14',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <script>
+    // Initialize theme
+    if (localStorage.theme === 'light') {
+      document.documentElement.classList.remove('dark')
+    } else {
+      document.documentElement.classList.add('dark')
+    }
+  </script>
   <style>
     .fade-in {
       animation: fadeIn 0.3s ease-in;
@@ -26,7 +51,7 @@
   </style>
 </head>
 
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
   <div id="root"></div>
 
   <script type="text/babel" data-type="module">
@@ -85,10 +110,23 @@
       }
     };
 
+    // Icons
+    const MoonIcon = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+      </svg>
+    );
+
+    const SunIcon = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    );
+
     // UI Components
     const Input = ({ label, id, type = 'text', value, onChange, required = false, className = '', ...props }) => (
       <div className={`mb-4 ${className}`}>
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
         <input
@@ -97,7 +135,7 @@
           value={value}
           onChange={onChange}
           required={required}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400"
           {...props}
         />
       </div>
@@ -105,7 +143,7 @@
 
     const Select = ({ label, id, value, onChange, options, required = false, className = '' }) => (
       <div className={`mb-4 ${className}`}>
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
         <select
@@ -113,9 +151,9 @@
           value={value}
           onChange={onChange}
           required={required}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
         >
-          <option value="">Select an option</option>
+          <option value="" className="text-gray-500 dark:text-gray-400">Select an option</option>
           {options.map(option => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -128,8 +166,8 @@
     const Button = ({ children, onClick, disabled = false, variant = 'primary', className = '', ...props }) => {
       const baseClasses = "px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors";
       const variantClasses = {
-        primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-        secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500",
+        primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700",
+        secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600",
         danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500"
       };
 
@@ -146,9 +184,9 @@
     };
 
     const Alert = ({ message, type = 'info', onClose }) => (
-      <div className={`p-4 mb-4 rounded-md fade-in ${type === 'error' ? 'bg-red-50 text-red-800' :
-        type === 'success' ? 'bg-green-50 text-green-800' :
-          'bg-blue-50 text-blue-800'
+      <div className={`p-4 mb-4 rounded-md fade-in ${type === 'error' ? 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800' :
+        type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800' :
+          'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800'
         }`}>
         <div className="flex justify-between items-center">
           <span>{message}</span>
@@ -171,6 +209,26 @@
       const [loading, setLoading] = useState(false);
       const [alert, setAlert] = useState(null);
       const [language, setLanguage] = useState('en');
+      const [theme, setTheme] = useState(() => {
+        if (typeof window !== 'undefined' && localStorage.theme) {
+          return localStorage.theme;
+        }
+        return 'dark'; // Default to dark
+      });
+
+      useEffect(() => {
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+          localStorage.theme = 'dark';
+        } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.theme = 'light';
+        }
+      }, [theme]);
+
+      const toggleTheme = () => {
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+      };
 
       const translations = {
         en: {
@@ -350,9 +408,9 @@
 
       const renderGenerateTab = () => (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">{t.generateTitle}</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{t.generateTitle}</h2>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-100 dark:border-gray-700">
             <Select
               id="cert_type"
               label={t.certType}
@@ -395,12 +453,12 @@
             </div>
 
             {validationNumber && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md space-y-3">
-                <p className="text-blue-800 font-medium">{t.successGen}</p>
-                <p className="text-sm text-blue-700">
-                  {t.validationNum}: <span className="font-mono bg-blue-100 px-2 py-1 rounded">{validationNumber}</span>
+              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md space-y-3">
+                <p className="text-blue-800 dark:text-blue-200 font-medium">{t.successGen}</p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  {t.validationNum}: <span className="font-mono bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded select-all">{validationNumber}</span>
                 </p>
-                <div className="flex flex-wrap gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <Button
                     onClick={async () => {
                       try {
@@ -429,7 +487,7 @@
                     {t.validateButton}
                   </Button>
                 </div>
-                <p className="text-xs text-blue-600 mt-2">
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
                   {t.saveNum}
                 </p>
               </div>
@@ -440,9 +498,9 @@
 
       const renderValidateTab = () => (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">{t.validateTitle}</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{t.validateTitle}</h2>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-100 dark:border-gray-700">
             <Input
               id="validate-input"
               label={t.validationNum}
@@ -463,9 +521,9 @@
             </div>
 
             {validationResult && (
-              <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-                <h3 className="text-lg font-medium text-green-800">{t.validCert}</h3>
-                <div className="mt-2 space-y-2 text-sm text-green-700">
+              <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                <h3 className="text-lg font-medium text-green-800 dark:text-green-200">{t.validCert}</h3>
+                <div className="mt-2 space-y-2 text-sm text-green-700 dark:text-green-300">
                   <p><span className="font-medium">{t.type}:</span> {validationResult.cert_type}</p>
                   <p><span className="font-medium">{t.recipientLabel}:</span> {validationResult.recipient_name}</p>
                   <p><span className="font-medium">{t.itemLabel}:</span> {validationResult.item_to_prove}</p>
@@ -478,45 +536,60 @@
       );
 
       return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
           {/* Header */}
-          <header className="bg-white shadow">
-            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-              <h1 className="text-3xl font-bold text-gray-900">{t.title}</h1>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-gray-700">Language:</span>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-1 px-2"
+          <header className="bg-white dark:bg-gray-800 shadow transition-colors duration-200">
+            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white text-center sm:text-left">{t.title}</h1>
+              <div className="flex items-center space-x-4">
+                {/* Theme Toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  aria-label="Toggle theme"
                 >
-                  <option value="en">English</option>
-                  <option value="uk">Українська</option>
-                </select>
+                  {theme === 'dark' ? (
+                    <SunIcon className="h-6 w-6 text-yellow-500" />
+                  ) : (
+                    <MoonIcon className="h-6 w-6" />
+                  )}
+                </button>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">{t.selectLang}:</span>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 py-1 px-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  >
+                    <option value="en">English</option>
+                    <option value="uk">Українська</option>
+                  </select>
+                </div>
               </div>
             </div>
           </header>
 
           {/* Main Content */}
-          <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             {/* Tabs */}
-            <div className="border-b border-gray-200 mb-8">
-              <nav className="-mb-px flex space-x-8">
+            <div className="border-b border-gray-200 dark:border-gray-700 mb-8">
+              <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                 <button
                   onClick={() => setActiveTab('generate')}
                   className={`${activeTab === 'generate'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
                 >
                   {t.generateTab}
                 </button>
                 <button
                   onClick={() => setActiveTab('validate')}
                   className={`${activeTab === 'validate'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
                 >
                   {t.validateTab}
                 </button>
@@ -535,10 +608,9 @@
             )}
 
             {/* Tab Content */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="px-4 py-5 sm:p-6">
                 {activeTab === 'generate' && renderGenerateTab()}
-                {activeTab === 'download' && renderDownloadTab()}
                 {activeTab === 'validate' && renderValidateTab()}
               </div>
             </div>
@@ -547,9 +619,9 @@
           {/* Loading Overlay */}
           {loading && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-3">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg flex items-center space-x-3 border border-gray-200 dark:border-gray-700">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <span className="text-gray-700">Processing...</span>
+                <span className="text-gray-700 dark:text-gray-200">Processing...</span>
               </div>
             </div>
           )}
