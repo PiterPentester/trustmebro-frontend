@@ -267,6 +267,9 @@
           certInvalid: 'Certificate is not valid',
           genSuccess: 'Certificate generated successfully!',
           valNumRequired: 'Please enter a validation number',
+          orientation: 'Orientation',
+          landscape: 'Landscape',
+          portrait: 'Portrait',
         },
         uk: {
           title: 'Генератор Сертифікатів TrustMeBro',
@@ -304,6 +307,9 @@
           certInvalid: 'Сертифікат не є дійсним',
           genSuccess: 'Сертифікат успішно створено!',
           valNumRequired: 'Будь ласка, введіть номер валідації',
+          orientation: 'Орієнтація',
+          landscape: 'Альбомна',
+          portrait: 'Книжкова',
         }
       };
 
@@ -314,7 +320,8 @@
         cert_type: '',
         recipient: '',
         item_to_prove: '',
-        language: 'en'
+        language: 'en',
+        orientation: 'landscape'
       });
       const [validationNumber, setValidationNumber] = useState('');
 
@@ -439,6 +446,18 @@
               value={certData.item_to_prove}
               onChange={handleCertDataChange}
               placeholder={t.itemPlaceholder}
+              required
+            />
+
+            <Select
+              id="orientation"
+              label={t.orientation}
+              value={certData.orientation}
+              onChange={handleCertDataChange}
+              options={[
+                { value: 'landscape', label: t.landscape },
+                { value: 'portrait', label: t.portrait }
+              ]}
               required
             />
 
