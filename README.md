@@ -15,6 +15,7 @@
 ## ✨ Features
 
 - **Certificate Dashboard**: Intuitive form to create new certificates.
+- **Layout Selection**: Toggle between landscape and portrait modes for your certificate.
 - **Real-time Validation**: Instant verification of certificates via validation numbers.
 - **PDF Download**: Direct download of generated certificates.
 - **Responsive Design**: Looks great on desktop and mobile.
