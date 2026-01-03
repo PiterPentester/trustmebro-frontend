@@ -13,4 +13,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# Install gettext for envsubst and run substitution on startup
+CMD ["/bin/sh", "-c", "envsubst '$FRONTEND_VERSION' < /usr/share/nginx/html/index.html > /usr/share/nginx/html/index.html.tmp && mv /usr/share/nginx/html/index.html.tmp /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
