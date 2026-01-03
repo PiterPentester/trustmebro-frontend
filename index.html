@@ -49,6 +49,9 @@
       }
     }
   </style>
+  <script>
+    window.FRONTEND_VERSION = '${FRONTEND_VERSION}';
+  </script>
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
@@ -106,6 +109,14 @@
           throw new Error(error.detail?.[0]?.msg || 'Failed to validate certificate');
         }
 
+        return response.json();
+      },
+      async getVersion() {
+        const response = await fetch(`${API_BASE_URL}/version`);
+        if (!response.ok) {
+          // If fails, return unknown or ignore
+          return { version: 'unknown' };
+        }
         return response.json();
       }
     };
@@ -203,6 +214,21 @@
       </div>
     );
 
+    const Footer = ({ frontendVersion, backendVersion }) => {
+      // Handle unreplaced variable or missing version
+      const frontVer = !frontendVersion || frontendVersion.startsWith('${') ? 'local-dev' : frontendVersion;
+      const backVer = backendVersion || '...';
+
+      return (
+        <footer className="bg-white dark:bg-gray-800 shadow-inner mt-auto py-4 transition-colors duration-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500 dark:text-gray-400">
+            <p>Frontend: v{frontVer} | Backend: v{backVer}</p>
+            <p className="text-xs mt-1">© {new Date().getFullYear()} TrustMeBro. All rights reserved.</p>
+          </div>
+        </footer>
+      );
+    };
+
     // Main App Component
     const App = () => {
       const [activeTab, setActiveTab] = useState('generate'); // 'generate' or 'validate'
@@ -215,6 +241,7 @@
         }
         return 'dark'; // Default to dark
       });
+      const [backendVersion, setBackendVersion] = useState(null);
 
       useEffect(() => {
         if (theme === 'dark') {
@@ -338,6 +365,18 @@
           setValidateInput(match[1]);
           setActiveTab('validate');
         }
+
+        // Fetch backend version
+        const fetchVersion = async () => {
+          try {
+            const data = await apiService.getVersion();
+            setBackendVersion(data.version);
+          } catch (e) {
+            console.error("Failed to fetch backend version", e);
+            setBackendVersion('unknown');
+          }
+        };
+        fetchVersion();
       }, []);
 
       // Update certData when language changes
@@ -555,7 +594,7 @@
       );
 
       return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 flex flex-col">
           {/* Header */}
           <header className="bg-white dark:bg-gray-800 shadow transition-colors duration-200">
             <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
@@ -590,7 +629,7 @@
           </header>
 
           {/* Main Content */}
-          <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <main className="w-full flex-grow max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             {/* Tabs */}
             <div className="border-b border-gray-200 dark:border-gray-700 mb-8">
               <nav className="-mb-px flex space-x-8" aria-label="Tabs">
@@ -644,6 +683,7 @@
               </div>
             </div>
           )}
+          <Footer frontendVersion={window.FRONTEND_VERSION} backendVersion={backendVersion} />
         </div>
       );
     };
