@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/piterpentester/trustmebro-frontend:latest
+        image: ghcr.io/piterpentester/trustmebro-frontend:a8ca15f7
         imagePullPolicy: Always
         ports:
         - name: http
@@ -35,7 +35,7 @@ spec:
           protocol: TCP
         env:
         - name: FRONTEND_VERSION
-          value: "latest"
+          value: "a8ca15f7"
         resources:
           requests:
             cpu: "50m"
