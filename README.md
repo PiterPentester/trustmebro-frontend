@@ -12,6 +12,8 @@
 
 **TrustMeBro Frontend** is the user-facing web application for the TrustMeBro service. It provides a clean, modern interface for users to generate and validate certificates. Whether you need to prove you are the "World's Best Boss" or validate a friend's claim of "Expert Sandwich Maker", this portal makes it happen.
 
+## Backend is here: [trustmebro-backend](https://github.com/PiterPentester/trustmebro-backend)
+
 ## ✨ Features
 
 - **Certificate Dashboard**: Intuitive form to create new certificates.
